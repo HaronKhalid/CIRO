@@ -5,16 +5,12 @@ import MapComponent from '@/components/MapComponent';
 import MapTab from '@/components/tabs/MapTab';
 import RoutesTab from '@/components/tabs/RoutesTab';
 import AlertsTab from '@/components/tabs/AlertsTab';
-import { WeatherForecast } from '@/lib/api/weather';
-import { AqiData } from '@/lib/api/aqi';
 import { generateLiveAlerts, Alert } from '@/lib/api/alerts';
 
 export default function MobileShell() {
   const [activeTab, setActiveTab] = useState<TabType>('map');
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [floodRisk, setFloodRisk] = useState<number>(0);
-  const [weather, setWeather] = useState<WeatherForecast | null>(null);
-  const [aqi, setAqi] = useState<AqiData | null>(null);
   
   // Directions state can be lifted here so both RoutesTab and MapComponent can access it
   const [directionsResponse, setDirectionsResponse] = useState<google.maps.DirectionsResult | null>(null);
@@ -48,7 +44,7 @@ export default function MobileShell() {
 
       {/* Tab Content Layer */}
       <div className="absolute inset-0 z-10 pointer-events-none flex flex-col justify-between">
-         {activeTab === 'map' && <MapTab alerts={alerts} floodRisk={floodRisk} lat={LAT} lng={LON} />}
+         {activeTab === 'map' && <MapTab alerts={alerts} floodRisk={floodRisk} />}
          {activeTab === 'routes' && <RoutesTab setDirectionsResponse={setDirectionsResponse} />}
          {activeTab === 'alerts' && <AlertsTab alerts={alerts} />}
          {activeTab === 'profile' && (

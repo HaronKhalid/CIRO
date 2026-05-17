@@ -118,7 +118,7 @@ export default function MapComponent({ lat, lng, directionsResponse, alerts = []
     if (directionsRenderer) {
       directionsRenderer.setDirections(directionsResponse || null);
     }
-  }, [directionsResponse, directionsRenderer]);
+  }, [directionsResponse, directionsRenderer, alerts]);
 
   return (
     <div className="w-full h-full relative">

@@ -6,7 +6,7 @@ export interface FireData {
   acq_time: string;
 }
 
-export async function fetchFirmsData(lat: number, lon: number, radiusKm: number = 50): Promise<FireData[]> {
+export async function fetchFirmsData(_lat: number, _lon: number): Promise<FireData[]> {
   // NASA FIRMS requires an API key for the live CSV endpoint.
   // In a production environment, this would hit the backend or use a secure proxy.
   // For now, we mock the FIRMS response or use a proxy if available.

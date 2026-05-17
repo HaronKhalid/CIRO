@@ -2,7 +2,7 @@
 import React from 'react';
 import { Alert } from '@/lib/api/alerts';
 
-export default function MapTab({ alerts, floodRisk, lat, lng }: { alerts: Alert[], floodRisk: number, lat: number, lng: number }) {
+export default function MapTab({ alerts, floodRisk }: { alerts: Alert[], floodRisk: number }) {
   // Find AQI from alerts, otherwise default to "Good"
   const aqiAlert = alerts.find(a => a.type === 'AQI');
   const displayAqi = aqiAlert ? aqiAlert.description.split('•')[0].replace('AQI ', '') : 'Good';

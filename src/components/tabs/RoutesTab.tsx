@@ -32,6 +32,7 @@ export default function RoutesTab({ setDirectionsResponse }: { setDirectionsResp
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     calculateRoute();
     
     return () => {
