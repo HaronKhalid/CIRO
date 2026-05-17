@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState } from 'react';
+import { Alert } from '@/lib/api/alerts';
 
 // For production, the API key shouldn't be exposed directly in frontend code,
 // but for the sake of this prototype we're using it to initialize the map.
@@ -10,9 +11,10 @@ interface MapComponentProps {
   lat: number;
   lng: number;
   directionsResponse?: google.maps.DirectionsResult | null;
+  alerts?: Alert[];
 }
 
-export default function MapComponent({ lat, lng, directionsResponse }: MapComponentProps) {
+export default function MapComponent({ lat, lng, directionsResponse, alerts = [] }: MapComponentProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [directionsRenderer, setDirectionsRenderer] = useState<google.maps.DirectionsRenderer | null>(null);
@@ -77,22 +79,20 @@ export default function MapComponent({ lat, lng, directionsResponse }: MapCompon
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setMap(mapInstance);
 
-      // Create a few mock alert markers for the demo based on the GUI design
-      const markers = [
-        { lat: 33.7215, lng: 73.0433, type: 'alert' }, // G-9
-        { lat: 33.7315, lng: 73.0633, type: 'warning' }, // F-8
-        { lat: 33.7415, lng: 73.0233, type: 'alert' }, // F-10
-      ];
+      // Create dynamic markers from the alerts prop
+      alerts.forEach(alert => {
+        let fillColor = "#f59e0b"; // Medium/Warning (Orange)
+        if (alert.severity === 'High') fillColor = "#ef4444"; // High/Danger (Red)
+        if (alert.severity === 'Low') fillColor = "#3b82f6"; // Low (Blue)
 
-      markers.forEach(m => {
-        const isAlert = m.type === 'alert';
         new window.google.maps.Marker({
-          position: { lat: m.lat, lng: m.lng },
+          position: { lat: alert.lat, lng: alert.lng },
           map: mapInstance,
+          title: alert.title,
           icon: {
             path: window.google.maps.SymbolPath.CIRCLE,
-            scale: 12,
-            fillColor: isAlert ? "#ef4444" : "#f59e0b",
+            scale: 10,
+            fillColor: fillColor,
             fillOpacity: 1,
             strokeWeight: 3,
             strokeColor: "#1A222C"

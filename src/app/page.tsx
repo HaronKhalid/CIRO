@@ -5,11 +5,14 @@ import MapComponent from '@/components/MapComponent';
 import MapTab from '@/components/tabs/MapTab';
 import RoutesTab from '@/components/tabs/RoutesTab';
 import AlertsTab from '@/components/tabs/AlertsTab';
-import { WeatherForecast, fetchWeatherForecast } from '@/lib/api/weather';
-import { AqiData, fetchAqiData } from '@/lib/api/aqi';
+import { WeatherForecast } from '@/lib/api/weather';
+import { AqiData } from '@/lib/api/aqi';
+import { generateLiveAlerts, Alert } from '@/lib/api/alerts';
 
 export default function MobileShell() {
   const [activeTab, setActiveTab] = useState<TabType>('map');
+  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [floodRisk, setFloodRisk] = useState<number>(0);
   const [weather, setWeather] = useState<WeatherForecast | null>(null);
   const [aqi, setAqi] = useState<AqiData | null>(null);
   
@@ -23,12 +26,9 @@ export default function MobileShell() {
   useEffect(() => {
     async function loadData() {
       try {
-        const [weatherData, aqiData] = await Promise.all([
-          fetchWeatherForecast(LAT, LON),
-          fetchAqiData(LAT, LON)
-        ]);
-        setWeather(weatherData);
-        setAqi(aqiData);
+        const { alerts: liveAlerts, floodRisk: liveRisk } = await generateLiveAlerts(LAT, LON);
+        setAlerts(liveAlerts);
+        setFloodRisk(liveRisk);
       } catch (e) {
         console.error("Failed to fetch dashboard data:", e);
       }
@@ -43,14 +43,14 @@ export default function MobileShell() {
           This remains mounted at all times. If Alerts is active, the AlertsTab renders a solid background to cover it. 
       */}
       <div className="absolute inset-0 z-0">
-         <MapComponent lat={LAT} lng={LON} directionsResponse={directionsResponse} />
+         <MapComponent lat={LAT} lng={LON} directionsResponse={directionsResponse} alerts={alerts} />
       </div>
 
       {/* Tab Content Layer */}
       <div className="absolute inset-0 z-10 pointer-events-none flex flex-col justify-between">
-         {activeTab === 'map' && <MapTab weather={weather} aqi={aqi} lat={LAT} lng={LON} />}
+         {activeTab === 'map' && <MapTab alerts={alerts} floodRisk={floodRisk} lat={LAT} lng={LON} />}
          {activeTab === 'routes' && <RoutesTab setDirectionsResponse={setDirectionsResponse} />}
-         {activeTab === 'alerts' && <AlertsTab />}
+         {activeTab === 'alerts' && <AlertsTab alerts={alerts} />}
          {activeTab === 'profile' && (
            <div className="pointer-events-auto bg-[#0A0F16] h-full w-full flex items-center justify-center text-gray-400">
              <div className="text-center">
