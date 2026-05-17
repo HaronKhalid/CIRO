@@ -9,14 +9,17 @@ const API_KEY = "AIzaSyBFJkbjX4heVyVU_7YvhwiPa4Ln0UNmJtM";
 interface MapComponentProps {
   lat: number;
   lng: number;
+  directionsResponse?: google.maps.DirectionsResult | null;
 }
 
-export default function MapComponent({ lat, lng }: MapComponentProps) {
+export default function MapComponent({ lat, lng, directionsResponse }: MapComponentProps) {
   const [isLoaded, setIsLoaded] = useState(false);
+  const [map, setMap] = useState<google.maps.Map | null>(null);
+  const [directionsRenderer, setDirectionsRenderer] = useState<google.maps.DirectionsRenderer | null>(null);
 
   useEffect(() => {
     // Dynamically load Google Maps Script to avoid SSR issues
-    if (window.google) {
+    if (window.google && window.google.maps) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsLoaded(true);
       return;
@@ -44,13 +47,14 @@ export default function MapComponent({ lat, lng }: MapComponentProps) {
   }, []);
 
   useEffect(() => {
-    if (isLoaded && window.google) {
-      const map = new window.google.maps.Map(document.getElementById("map") as HTMLElement, {
+    if (isLoaded && window.google && !map) {
+      const mapInstance = new window.google.maps.Map(document.getElementById("map") as HTMLElement, {
         center: { lat, lng },
-        zoom: 12,
+        zoom: 13,
+        disableDefaultUI: true, // Hide default controls for a clean mobile look
         styles: [
           // Dark mode map styles for premium aesthetic
-          { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
+          { elementType: "geometry", stylers: [{ color: "#1e2733" }] }, // Darker base to match UI
           { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
           { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
           { featureType: "administrative.locality", elementType: "labels.text.fill", stylers: [{ color: "#d59563" }] },
@@ -70,22 +74,51 @@ export default function MapComponent({ lat, lng }: MapComponentProps) {
           { featureType: "water", elementType: "labels.text.stroke", stylers: [{ color: "#17263c" }] }
         ]
       });
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setMap(mapInstance);
 
-      new window.google.maps.Marker({
-        position: { lat, lng },
-        map,
-        title: "Incident Location",
-        icon: {
-          path: window.google.maps.SymbolPath.CIRCLE,
-          scale: 10,
-          fillColor: "#ef4444",
-          fillOpacity: 1,
-          strokeWeight: 2,
-          strokeColor: "#ffffff"
+      // Create a few mock alert markers for the demo based on the GUI design
+      const markers = [
+        { lat: 33.7215, lng: 73.0433, type: 'alert' }, // G-9
+        { lat: 33.7315, lng: 73.0633, type: 'warning' }, // F-8
+        { lat: 33.7415, lng: 73.0233, type: 'alert' }, // F-10
+      ];
+
+      markers.forEach(m => {
+        const isAlert = m.type === 'alert';
+        new window.google.maps.Marker({
+          position: { lat: m.lat, lng: m.lng },
+          map: mapInstance,
+          icon: {
+            path: window.google.maps.SymbolPath.CIRCLE,
+            scale: 12,
+            fillColor: isAlert ? "#ef4444" : "#f59e0b",
+            fillOpacity: 1,
+            strokeWeight: 3,
+            strokeColor: "#1A222C"
+          }
+        });
+      });
+
+      // Initialize Directions Renderer
+      const renderer = new window.google.maps.DirectionsRenderer({
+        suppressMarkers: false,
+        polylineOptions: {
+          strokeColor: '#3b82f6', // Bright Blue for recommended route
+          strokeWeight: 6,
+          strokeOpacity: 0.8
         }
       });
+      renderer.setMap(mapInstance);
+      setDirectionsRenderer(renderer);
     }
-  }, [isLoaded, lat, lng]);
+  }, [isLoaded, lat, lng, map]);
+
+  useEffect(() => {
+    if (directionsRenderer) {
+      directionsRenderer.setDirections(directionsResponse || null);
+    }
+  }, [directionsResponse, directionsRenderer]);
 
   return (
     <div className="w-full h-full relative">
