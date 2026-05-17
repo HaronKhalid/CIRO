@@ -1,34 +1,45 @@
 "use client";
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
 export default function RoutesTab({ setDirectionsResponse }: { setDirectionsResponse: (res: google.maps.DirectionsResult | null) => void }) {
+  const [origin, setOrigin] = useState("F-10 Markaz, Islamabad");
+  const [destination, setDestination] = useState("NUML University, Islamabad");
+  const [isCalculating, setIsCalculating] = useState(false);
 
-  // Auto-calculate route on mount for demo
-  useEffect(() => {
-    if (window.google && window.google.maps) {
+  // Calculate route function
+  const calculateRoute = () => {
+    if (window.google && window.google.maps && origin && destination) {
+      setIsCalculating(true);
       const directionsService = new window.google.maps.DirectionsService();
       directionsService.route(
         {
-          origin: "F-10 Markaz, Islamabad",
-          destination: "NUML University, Islamabad",
+          origin: origin,
+          destination: destination,
           travelMode: window.google.maps.TravelMode.DRIVING,
           provideRouteAlternatives: true,
         },
         (result, status) => {
+          setIsCalculating(false);
           if (status === window.google.maps.DirectionsStatus.OK) {
             setDirectionsResponse(result);
           } else {
             console.error(`error fetching directions ${result}`);
+            setDirectionsResponse(null);
           }
         }
       );
     }
+  };
+
+  useEffect(() => {
+    calculateRoute();
     
     return () => {
       // Clear route when unmounting
       setDirectionsResponse(null);
     }
-  }, [setDirectionsResponse]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setDirectionsResponse]); // Intentionally omitting origin/destination to prevent spamming on every keystroke.
 
   return (
     <div className="h-full w-full flex flex-col pointer-events-none pb-[90px] pt-12">
@@ -51,17 +62,38 @@ export default function RoutesTab({ setDirectionsResponse }: { setDirectionsResp
               
               <div className="flex items-center mb-3">
                 <div className="w-3 h-3 rounded-full border-2 border-emerald-500 mr-3 bg-[#0A0F16] z-10"></div>
-                <input type="text" defaultValue="Domino's LFJP, Islamabad" className="bg-transparent border-none text-sm text-gray-200 outline-none w-full" />
+                <input 
+                  type="text" 
+                  value={origin} 
+                  onChange={(e) => setOrigin(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && calculateRoute()}
+                  placeholder="Starting point..."
+                  className="bg-transparent border-none text-sm text-gray-200 outline-none w-full" 
+                />
               </div>
               <div className="border-t border-gray-800/60 w-full mb-3 ml-6"></div>
               <div className="flex items-center">
                 <div className="w-3 h-3 rounded-full bg-red-500 mr-3 z-10"></div>
-                <input type="text" defaultValue="NUML University, Islamabad" className="bg-transparent border-none text-sm text-gray-200 outline-none w-full" />
+                <input 
+                  type="text" 
+                  value={destination} 
+                  onChange={(e) => setDestination(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && calculateRoute()}
+                  placeholder="Destination..."
+                  className="bg-transparent border-none text-sm text-gray-200 outline-none w-full" 
+                />
               </div>
 
-              {/* Reverse Button */}
-              <button className="absolute right-3 top-1/2 -translate-y-1/2 bg-[#1A222C] p-2 rounded-full shadow-lg border border-gray-700">
-                <svg className="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg>
+              {/* Search Button */}
+              <button 
+                onClick={calculateRoute}
+                disabled={isCalculating}
+                className={`absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full shadow-lg border border-gray-700 transition-colors ${isCalculating ? 'bg-gray-800 text-gray-500' : 'bg-emerald-600 hover:bg-emerald-500 text-white'}`}>
+                {isCalculating ? (
+                  <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                ) : (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                )}
               </button>
             </div>
 
