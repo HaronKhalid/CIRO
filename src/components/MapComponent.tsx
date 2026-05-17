@@ -17,6 +17,7 @@ export default function MapComponent({ lat, lng }: MapComponentProps) {
   useEffect(() => {
     // Dynamically load Google Maps Script to avoid SSR issues
     if (window.google) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsLoaded(true);
       return;
     }
